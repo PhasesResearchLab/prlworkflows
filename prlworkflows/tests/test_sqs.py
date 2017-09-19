@@ -237,7 +237,7 @@ def test_abstract_sqs_scales_volume_when_made_concrete():
     concrete_structure = structure.get_concrete_sqs([['Fe', 'Ni'], ['Al']])
     concrete_structure = structure.get_concrete_sqs([['Fe', 'Ni'], ['Al']])
     assert np.isclose(concrete_structure.volume, 445.35213050176463)
-    assert np.isclose(concrete_structure.density, 4.122750000000001)
+    assert np.isclose(concrete_structure.density, 4.12275)
 
     structure = lat_in_to_sqs(ATAT_FCC_L12_LATTICE_IN)
     concrete_structure = structure.get_concrete_sqs([['Fe', 'Ni'], ['Al']], scale_volume=False)

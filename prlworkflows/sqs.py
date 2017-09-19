@@ -93,19 +93,11 @@ class AbstractSQS(Structure):
 
         if scale_volume:
             fractional_comp = dict(self_copy.composition.fractional_composition)
-            f = []
-            for key in fractional_comp:
-                f.append(fractional_comp[key])
-            element_density = []
             estimated_density = 0
-            count = 0
             for component in self_copy.composition.elements :
                 temp = pmg.Element(component).data['Density of solid']
-                temp = (re.findall(r'\d+', temp))
-                temp = int(temp[0])
-                estimated_density = estimated_density + (f[count] * temp)/1000
-                element_density.append(temp)
-                count += 1
+                density = float(temp.split(' ')[0])
+                estimated_density = estimated_density + (fractional_comp[component] * density)/1000
             self_copy.scale_lattice((self_copy.volume/estimated_density)*self_copy.density)
 
         # finally we will construct the SQS object and set the values for the canonicalized
