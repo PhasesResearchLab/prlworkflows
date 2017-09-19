@@ -9,7 +9,6 @@ from __future__ import division
 
 import itertools
 import copy
-import re
 import numpy as np
 from pymatgen import Structure
 import pymatgen as pmg
@@ -97,7 +96,7 @@ class AbstractSQS(Structure):
             for component in self_copy.composition.elements :
                 temp = pmg.Element(component).data['Density of solid']
                 density = float(temp.split(' ')[0])
-                estimated_density = estimated_density + (fractional_comp[component] * density)/1000
+                estimated_density += (fractional_comp[component] * density)/1000
             self_copy.scale_lattice((self_copy.volume/estimated_density)*self_copy.density)
 
         # finally we will construct the SQS object and set the values for the canonicalized
