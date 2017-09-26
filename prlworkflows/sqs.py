@@ -186,6 +186,9 @@ class SQS(Structure):
         self.sublattice_site_ratios = kwargs.pop('sublattice_site_ratios', None)
         super(SQS, self).__init__(*args, **kwargs)
 
+    def __eq__(self, other):
+        pass
+
     @property
     def espei_sublattice_configuration(self):
         """
@@ -273,7 +276,6 @@ class SQS(Structure):
 def enumerate_sqs(structure, subl_model, endmembers=True, scale_volume=True, skip_on_failure=False):
     """
     Return a list of all of the concrete Structure objects from an abstract Structure and concrete sublattice model.
-
     Parameters
     ----------
     structure : AbstractSQS
@@ -282,9 +284,7 @@ def enumerate_sqs(structure, subl_model, endmembers=True, scale_volume=True, ski
         List of strings of species names, in the style of ESPEI `input.json`. This sublattice model
         can be of higher dimension than the SQS, e.g. a [["Al", "Fe", "Ni"]] for a fcc 75/25 binary SQS
         will generate the following Structures:
-        Al0.75Fe0.25, Al0.75Ni0.25
-        Fe0.75Al0.25, Fe0.75Ni0.25
-        Ni0.75Al0.25, Ni0.75Fe0.25
+        Al0.75Fe0.25, Al0.75Ni0.25      Fe0.75Al0.25, Fe0.75Ni0.25      Ni0.75Al0.25, Ni0.75Fe0.25
         *Note that the ordering of species the sublattice model does not matter!*
     endmembers : bool
         Include endmembers in the enumerated structures if True. Defaults to True.
@@ -307,12 +307,21 @@ def enumerate_sqs(structure, subl_model, endmembers=True, scale_volume=True, ski
         raise ValueError('The passed sublattice model ({}) is of lower order than the passed structure supports ({})'.format(subl_model, structure.sublattice_model))
     possible_subls = []
     for subl, abstract_subl in zip(subl_model, structure.sublattice_model):
-        if endmembers:
-            subls = itertools.product(subl, repeat=len(abstract_subl))
-        else:
-            subls = itertools.permutations(subl, r=len(abstract_subl))
+        subls = itertools.permutations(subl, r=len(abstract_subl))
         possible_subls.append(subls)
     # TODO: possibly want combinations rather than permutations because [['Cu', 'Mg']] might == [['Mg', 'Cu']]
     unique_subl_models = itertools.product(*possible_subls)
+
     # create a list of concrete structures with the generated sublattice models
-    return [structure.get_concrete_sqs(model, scale_volume) for model in unique_subl_models]
+    result = []
+    sublattice_configuration = []
+    sublattice_occupancies = []
+    for model in unique_subl_models:
+        concrete = structure.get_concrete_sqs(model, scale_volume)
+        #check for degeneracy
+        if concrete.sublattice_configuration not in sublattice_configuration :
+            if concrete.sublattice_occupancies not in sublattice_occupancies :
+                sublattice_configuration.append(concrete.sublattice_configuration)
+                sublattice_occupancies.append(sublattice_occupancies)
+                result.append(concrete)
+    return result
