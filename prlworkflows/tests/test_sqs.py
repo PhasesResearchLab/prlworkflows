@@ -247,21 +247,21 @@ def test_sqs_is_properly_enumerated_for_a_higher_order_sublattice_model():
     """Tests that a sublattice model of higher order than an SQS properly enumerated"""
     structure = lat_in_to_sqs(ATAT_FCC_L12_LATTICE_IN)
     structures = enumerate_sqs(structure, [['Al', 'Ni'], ['Fe', 'Cr']], endmembers=False)
-    assert len(structures) == 4
+    assert len(structures) == 2
 
     structure = lat_in_to_sqs(ATAT_ROCKSALT_B1_LATTICE_IN)
     structures = enumerate_sqs(structure, [['Al', 'Ni'], ['Fe', 'Cr']], endmembers=True)
-    assert len(structures) == 16
+    assert len(structures) == 1
 
 def test_sqs_is_properly_enumerated_for_a_multiple_solution_sublattice_model():
     """Tests that a sublattice model with multiple solution sublattices is properly enumerated"""
     structure = lat_in_to_sqs(ATAT_ROCKSALT_B1_LATTICE_IN)
     structures = enumerate_sqs(structure, [['Al', 'Ni'], ['Fe', 'Cr']], endmembers=False)
-    assert len(structures) == 4
+    assert len(structures) == 1
 
     structure = lat_in_to_sqs(ATAT_ROCKSALT_B1_LATTICE_IN)
     structures = enumerate_sqs(structure, [['Al', 'Ni'], ['Fe', 'Cr']], endmembers=True)
-    assert len(structures) == 16
+    assert len(structures) == 1
     assert all([isinstance(s, SQS) for s in structures])
 
 
