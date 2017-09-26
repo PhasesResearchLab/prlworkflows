@@ -298,6 +298,7 @@ def enumerate_sqs(structure, subl_model, endmembers=True, scale_volume=True, ski
     [SQS]
         List of all concrete SQS objects that can be created from the sublattice model.
     """
+    print('\n running enumerated_sqs...')
     # error checking
     if len(subl_model) != len(structure.sublattice_model):
         raise ValueError('Passed sublattice model ({}) does not agree with the passed structure ({})'.format(subl_model, structure.sublattice_model))
