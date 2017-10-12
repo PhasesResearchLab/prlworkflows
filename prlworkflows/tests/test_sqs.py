@@ -443,3 +443,20 @@ def test_equality_of_sqs_objects_with_different_indexing():
     s2 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_2, sublattice_occupancies=occupancy_2, sublattice_site_ratios=site_ratios_2)
 
     assert s1 == s2
+
+@pytest.mark.skip
+def test_equality_of_sqs_objects_with_different_subl_ordering():
+    """SQS structures that are the same, but are ordered differently within a sublattice should be equal."""
+    # TODO: implement this behavior in SQS.__eq__
+    config_1 = [['A', 'B'], ['A']]
+    occupancy_1 = [[0.25, 0.75], [1]]
+    site_ratios_1 = [3, 1]
+
+    config_2 = [['B', 'A'], ['A']]
+    occupancy_2 = [[0.75, 0.25], [1]]
+    site_ratios_2 = [3, 1]
+
+    s1 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_1, sublattice_occupancies=occupancy_1, sublattice_site_ratios=site_ratios_1)
+    s2 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_2, sublattice_occupancies=occupancy_2, sublattice_site_ratios=site_ratios_2)
+
+    assert s1 == s2
