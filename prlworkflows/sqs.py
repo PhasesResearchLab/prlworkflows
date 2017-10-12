@@ -293,23 +293,21 @@ def enumerate_sqs(structure, subl_model, scale_volume=True, skip_on_failure=Fals
     [SQS]
         List of all concrete SQS objects that can be created from the sublattice model.
     """
-    # error checking
     if len(subl_model) != len(structure.sublattice_model):
         raise ValueError('Passed sublattice model ({}) does not agree with the passed structure ({})'.format(subl_model, structure.sublattice_model))
     possible_subls = []
     for subl, abstract_subl in zip(subl_model, structure.sublattice_model):
         subls = itertools.product(subl, repeat=len(abstract_subl))
         possible_subls.append(subls)
-    # TODO: possibly want combinations rather than permutations because [['Cu', 'Mg']] might == [['Mg', 'Cu']]
     unique_subl_models = itertools.product(*possible_subls)
 
-    # create a list of concrete structures with the generated sublattice models
-    result = []
-    non_degenerate = []
+    # create a list of unique concrete structures with the generated sublattice models
+    unique_sqs = []
+    unique_configurations_occupancies = []
     for model in unique_subl_models:
-        concrete = structure.get_concrete_sqs(model, scale_volume)
-        #check for degeneracy
-        if ([concrete.sublattice_configuration,concrete.sublattice_occupancies] not in non_degenerate):
-            non_degenerate.append([concrete.sublattice_configuration, concrete.sublattice_occupancies])
-            result.append(concrete)
-    return result
+        proposed_sqs = structure.get_concrete_sqs(model, scale_volume)
+        proposed_config_occupancy = (proposed_sqs.sublattice_configuration, proposed_sqs.sublattice_occupancies)
+        if proposed_config_occupancy not in unique_configurations_occupancies:
+            unique_configurations_occupancies.append(proposed_config_occupancy)
+            unique_sqs.append(proposed_sqs)
+    return unique_sqs
