@@ -121,3 +121,11 @@ def test_fw_spec_modified_by_powerup():
     wf = get_wf_robust_optimization(STRUCT)
     wf = update_fws_spec(wf, {'_preserve_fworker': True})
     assert all([fw.spec['_preserve_fworker'] == True for fw in wf.fws])
+
+
+def test_prl_gibbs_wf(patch_pmg_psp_dir, launch_dir, lpad, fworker):
+    wf = wf_gibbs_free_energy(STRUCT, {'VASP_CMD': None})
+    lpad.add_wf(wf)
+    os.mkdir('scratch')
+    # TODO: make this actually run by using run_no_vasp
+    launch_rocket(lpad, fworker=fworker)
