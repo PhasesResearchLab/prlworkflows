@@ -122,7 +122,6 @@ def wf_gibbs_free_energy(structure, c=None):
         Workflow
     """
     c = c or {}
-    #get statments
     vasp_cmd = c.get("VASP_CMD", VASP_CMD)
     db_file = c.get("DB_FILE", DB_FILE)
     robust_optimization = c.get("ROBUST", False)
@@ -135,7 +134,7 @@ def wf_gibbs_free_energy(structure, c=None):
     t_step = c.get("T_STEP", 100.0)
     pressure = c.get("PRESSURE", 0.0)
     poisson = c.get("POISSON", 0.25)
-    e_diff	= c.get("EDIFF", 1e-6)
+    e_diff = c.get("EDIFF", 1e-6)
     anharmonic_contribution = c.get("ANHARMONIC_CONTRIBUTION", False)
     metadata = c.get("METADATA", {})
     # 7 deformed structures: from -10% to +10% volume
