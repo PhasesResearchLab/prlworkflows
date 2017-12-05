@@ -184,7 +184,12 @@ def wf_gibbs_free_energy(structure, c=None):
             wf = get_wf_optimization(structure, vasp_cmd=vasp_cmd, db_file=db_file, name=name, vasp_input_set=vis_relax)
         wf.append_wf(wf_gibbs, wf.leaf_fw_ids)
     else:
-        fw = StaticFW(structure, vasp_cmd=vasp_cmd, db_file=db_file, name=name, vasp_input_set=vis_relax, prev_calc_loc=False)
+        uis_static = {"ISIF": 2,"ISTART": 1,"NELM": 1}
+        vis_trivial = PRLStaticSet(structure, force_gamma=True, lepsilon=lepsilon,
+                                user_kpoints_settings=user_kpoints_settings,
+                                user_incar_settings=uis_static)
+
+        fw = StaticFW(structure, vasp_cmd=vasp_cmd, db_file=db_file, name=name, vasp_input_set=vis_trivial, prev_calc_loc=False)
         wfname = "{}:{}".format(structure.composition.reduced_formula, name)
         wf = Workflow([fw], name=wfname, metadata=metadata)
         wf.append_wf(wf_gibbs, wf.leaf_fw_ids)
