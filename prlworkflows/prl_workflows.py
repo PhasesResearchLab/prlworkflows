@@ -3,7 +3,7 @@
 import shutil
 import numpy as np
 from uuid import uuid4
-from fireworks import Workflow, Firework, FiretaskBase
+from fireworks import Workflow, Firework, FiretaskBase, explicit_serialize
 
 from atomate.common.firetasks.glue_tasks import PassCalcLocs
 from atomate.vasp.firetasks.write_inputs import WriteVaspFromIOSet
@@ -106,11 +106,11 @@ def get_wf_optimization(structure, vasp_input_set=None, vasp_cmd="vasp", db_file
     wfname = "{}:{}".format(structure.composition.reduced_formula, name)
     return Workflow(fws, name=wfname, metadata=metadata)
 
-
+#fire task to convert poscar to contcar
+@explicit_serialize
 class ConvertPOSCARtoCONTCAR(FiretaskBase):
     required_params = []
     optional_params = []
-
     def run_task(self, fw_spec):
        shutil.copy('POSCAR', 'CONTCAR')
 
