@@ -1,17 +1,19 @@
 """Custom Phases Research Lab Workflows
 """
-
+import shutil
 import numpy as np
 from uuid import uuid4
+from fireworks import Workflow, Firework, FiretaskBase
 
-from fireworks import Workflow
+from atomate.common.firetasks.glue_tasks import PassCalcLocs
+from atomate.vasp.firetasks.write_inputs import WriteVaspFromIOSet
 from atomate.vasp.config import VASP_CMD, DB_FILE, ADD_WF_METADATA
-from atomate.vasp.fireworks.core import StaticFW
-from atomate.vasp.powerups import add_common_powerups, add_modify_incar, add_wf_metadata
 from atomate.vasp.workflows.base.gibbs import get_wf_gibbs_free_energy
+from atomate.vasp.powerups import add_common_powerups, add_modify_incar, add_wf_metadata
 
 from prlworkflows.prl_fireworks import OptimizeFW
 from prlworkflows.input_sets import PRLRelaxSet, PRLStaticSet
+
 
 def get_wf_robust_optimization(structure, vasp_input_set=None, vasp_cmd="vasp", db_file=None,
                                tag="", metadata=None, name='structure optimization'):
@@ -55,7 +57,7 @@ def get_wf_robust_optimization(structure, vasp_input_set=None, vasp_cmd="vasp", 
     0.1: 7-2-4 scheme with custodian full opt ISIF 7, custodian normal ISIF 2 and 4.
     """
     metadata = metadata or {}
-    metadata.update({'robust_optimization_version': 0.1 }) # SEMVER naming scheme
+    metadata.update({'robust_optimization_version': 0.1})  # SEMVER naming scheme
     vasp_input_set = vasp_input_set or PRLRelaxSet(structure)
 
     vol_relax_fw = OptimizeFW(structure, isif=7, job_type='full_opt_run', name=name, vasp_input_set=vasp_input_set, vasp_cmd=vasp_cmd, db_file=db_file, metadata=metadata)
@@ -104,6 +106,25 @@ def get_wf_optimization(structure, vasp_input_set=None, vasp_cmd="vasp", db_file
     wfname = "{}:{}".format(structure.composition.reduced_formula, name)
     return Workflow(fws, name=wfname, metadata=metadata)
 
+
+class ConvertPOSCARtoCONTCAR(FiretaskBase):
+    required_params = []
+    optional_params = []
+
+    def run_task(self, fw_spec):
+       shutil.copy('POSCAR', 'CONTCAR')
+
+
+# a trivial firework to pass calc_loc to the gibbs workflow
+class DummyFW(Firework):
+    def __init__(self, structure, name="dummy", vasp_input_set=None,**kwargs):
+        vasp_input_set = vasp_input_set or PRLStaticSet(structure)
+        t=[]
+        t.append(WriteVaspFromIOSet(structure=structure, vasp_input_set=vasp_input_set))
+        t.append(PassCalcLocs(name=name))
+        t.append(ConvertPOSCARtoCONTCAR())
+        super(DummyFW, self).__init__(t, name="{}-{}".format(
+            structure.composition.reduced_formula, name), **kwargs)
 
 def wf_gibbs_free_energy(structure, c=None):
     """The same as workflow Gibbs free energy preset in atomate proper, but allows for choosing
@@ -160,8 +181,8 @@ def wf_gibbs_free_energy(structure, c=None):
                                "analysis step; you can alternatively switch to the qha_type to "
                                "'debye_model' which does not require 'phonopy'.")
     vis_static = PRLStaticSet(structure, force_gamma=True, lepsilon=lepsilon,
-                             user_kpoints_settings=user_kpoints_settings,
-                             user_incar_settings=uis_static)
+                              user_kpoints_settings=user_kpoints_settings,
+                              user_incar_settings=uis_static)
     # get gibbs workflow and chain it to the optimization workflow
     wf_gibbs = get_wf_gibbs_free_energy(structure, user_kpoints_settings=user_kpoints_settings,
                                         deformations=deformations, vasp_cmd=vasp_cmd, db_file=db_file,
@@ -184,12 +205,7 @@ def wf_gibbs_free_energy(structure, c=None):
             wf = get_wf_optimization(structure, vasp_cmd=vasp_cmd, db_file=db_file, name=name, vasp_input_set=vis_relax)
         wf.append_wf(wf_gibbs, wf.leaf_fw_ids)
     else:
-        uis_static = {"ISIF": 2,"ISTART": 1,"NELM": 1}
-        vis_trivial = PRLStaticSet(structure, force_gamma=True, lepsilon=lepsilon,
-                                user_kpoints_settings=user_kpoints_settings,
-                                user_incar_settings=uis_static)
-
-        fw = StaticFW(structure, vasp_cmd=vasp_cmd, db_file=db_file, name=name, vasp_input_set=vis_trivial, prev_calc_loc=False)
+        fw = DummyFW(structure)
         wfname = "{}:{}".format(structure.composition.reduced_formula, name)
         wf = Workflow([fw], name=wfname, metadata=metadata)
         wf.append_wf(wf_gibbs, wf.leaf_fw_ids)
@@ -201,5 +217,4 @@ def wf_gibbs_free_energy(structure, c=None):
 
     if c.get("ADD_WF_METADATA", ADD_WF_METADATA):
         wf = add_wf_metadata(wf, structure)
-
     return wf
