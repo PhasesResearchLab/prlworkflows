@@ -117,6 +117,8 @@ class ConvertPOSCARtoCONTCAR(FiretaskBase):
         shutil.copy('POSCAR', 'CONTCAR')
         with open('OUTCAR', 'w') as f:
             f.write('Im a DummyFW OUTCAR')
+        with open('vasprun.xml', 'w') as f:
+            f.write('Im a DummyFW vasprum.xml')
 
 
 # a trivial firework to pass calc_loc to the gibbs workflow
