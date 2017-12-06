@@ -106,18 +106,22 @@ def get_wf_optimization(structure, vasp_input_set=None, vasp_cmd="vasp", db_file
     wfname = "{}:{}".format(structure.composition.reduced_formula, name)
     return Workflow(fws, name=wfname, metadata=metadata)
 
-#fire task to convert poscar to contcar
+
+# fire task to convert poscar to contcar
 @explicit_serialize
 class ConvertPOSCARtoCONTCAR(FiretaskBase):
     required_params = []
     optional_params = []
+
     def run_task(self, fw_spec):
-       shutil.copy('POSCAR', 'CONTCAR')
+        shutil.copy('POSCAR', 'CONTCAR')
+        with open('OUTCAR', 'w') as f:
+            f.write('Im a DummyFW OUTCAR')
 
 
 # a trivial firework to pass calc_loc to the gibbs workflow
 class DummyFW(Firework):
-    def __init__(self, structure, name="dummy", vasp_input_set=None,**kwargs):
+    def __init__(self, structure, name="dummy", vasp_input_set=None, **kwargs):
         vasp_input_set = vasp_input_set or PRLStaticSet(structure)
         t=[]
         t.append(WriteVaspFromIOSet(structure=structure, vasp_input_set=vasp_input_set))
@@ -125,6 +129,7 @@ class DummyFW(Firework):
         t.append(ConvertPOSCARtoCONTCAR())
         super(DummyFW, self).__init__(t, name="{}-{}".format(
             structure.composition.reduced_formula, name), **kwargs)
+
 
 def wf_gibbs_free_energy(structure, c=None):
     """The same as workflow Gibbs free energy preset in atomate proper, but allows for choosing
