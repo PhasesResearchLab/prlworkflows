@@ -19,13 +19,13 @@ class PRLRelaxSet(DictSet):
         'SIGMA': 0.2,
         'LREAL': False,
         'PREC': 'HIGH',
-        'ALGO': 'NORMAL'
+        'ALGO': 'NORMAL',
+        'ENCUT': 300,
     })
 
     def __init__(self, structure, **kwargs):
         self.kwargs = kwargs
-        super(PRLRelaxSet, self).__init__(
-            structure, PRLRelaxSet.CONFIG, **kwargs)
+        super(PRLRelaxSet, self).__init__(structure, PRLRelaxSet.CONFIG, **kwargs)
 
 class PRLStaticSet(DictSet):
     """Set tuned for metal relaxations (correct smearing).
@@ -38,12 +38,11 @@ class PRLStaticSet(DictSet):
     })
     CONFIG['KPOINTS'].pop('reciprocal_density')  # to be explicit
     CONFIG['INCAR'].update({
-        'ENCUT': 520, # MP compatibility
+        'ENCUT': 300, # MP compatibility
         'ISMEAR': -5,
         "NSW": 0,
         "IBRION": -1,
         'LREAL': False,
-        'ENCUT': 520,
         'ALGO': 'NORMAL',
         # other settings from MPStaticSet
         "LAECHG": True,
