@@ -10,7 +10,7 @@ import warnings
 class OptimizeFW(Firework):
     def __init__(self, structure, name="structure optimization", vasp_input_set=None, job_type="normal",
                  vasp_cmd="vasp", isif=None, metadata=None, override_default_vasp_params=None, db_file=None,
-                 force_gamma=True, parents=None, **kwargs):
+                 force_gamma=True, parents=None, db_insert=False, **kwargs):
         """
         Optimize the given structure.
         Args:
@@ -39,7 +39,8 @@ class OptimizeFW(Firework):
             t.append(ModifyIncar(incar_update={'ISIF': isif}))
         t.append(RunVaspCustodian(vasp_cmd=vasp_cmd, job_type=job_type))
         t.append(PassCalcLocs(name=name))
-        t.append(VaspToDb(db_file=db_file, additional_fields={"task_label": name, "metadata": metadata}))
+        if db_insert:
+            t.append(VaspToDb(db_file=db_file, additional_fields={"task_label": name, "metadata": metadata}))
         super(OptimizeFW, self).__init__(t, parents=parents, name="{}-{}".
                                          format(structure.composition.reduced_formula, name),
                                          **kwargs)

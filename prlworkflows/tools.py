@@ -15,7 +15,7 @@ def run_vasp_custodian(input_set, dir=None):
     ----------
     input_set : pymatgen.io.vasp.sets.VaspInputSet
         A single input set or a list of inputs
-    dir :
+    dir : str
 
     Returns
     -------
@@ -32,4 +32,7 @@ def run_vasp_custodian(input_set, dir=None):
     vasp_job = [VaspJob(['vasp_std'], backup=False)]
     custodian = Custodian(error_handlers, vasp_job, validators=validators)
     custodian.run()
+    custodian.finished
     os.chdir(start_dir)
+
+

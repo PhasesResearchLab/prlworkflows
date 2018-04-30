@@ -21,7 +21,7 @@ from prlworkflows.tools import run_vasp_custodian
 # Setup
 
 structure = Structure.from_spacegroup('Fm-3m', Lattice.cubic(4), ['Al'], [[0,0,0]])
-num_deformations = 1
+num_deformations = 7
 deformation_fraction = 0.05  # 5 percent
 name = 'Al-EV-curve'
 
