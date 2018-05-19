@@ -87,7 +87,7 @@ class PRLForceConstantsSet(DictSet):
     def __init__(self, structure, **kwargs):
         self.kwargs = kwargs
         super(PRLForceConstantsSet, self).__init__(
-            structure, PRLRelaxSet.CONFIG, **kwargs)
+            structure, PRLForceConstantsSet.CONFIG, **kwargs)
 
 class PRLStaticSet(DictSet):
     """Set tuned for metal relaxations (correct smearing).
