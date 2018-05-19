@@ -81,7 +81,7 @@ class CalculatePhononThermalProperties(FiretaskBase):
     def run_task(self, fw_spec):
         unitcell = Structure.from_file('POSCAR-unitcell')
         supercell_matrix = self['supercell_matrix']
-        temperatures, f_vib, s_vib, cv_vib, force_constants = get_f_vib_phonopy(unitcell, supercell_matrix, force_constants_vasprun='vasprun.xml', t_min=self['t_min'], t_max=self['t_max'], t_step=self['t_step'])
+        temperatures, f_vib, s_vib, cv_vib, force_constants = get_f_vib_phonopy(unitcell, supercell_matrix, vasprun_path='vasprun.xml', t_min=self['t_min'], t_max=self['t_max'], t_step=self['t_step'])
         thermal_props_dict = {
             'volume': unitcell.volume,
             'F_vib': f_vib,
