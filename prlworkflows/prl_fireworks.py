@@ -158,7 +158,7 @@ class PRLPhononFW(Firework):
             # the other inputs will get overridden by WriteVaspFromIOSetPrevStructure
             t.append(WriteVaspFromIOSet(structure=structure, vasp_input_set=vasp_input_set))
 
-        t.append(SupercellTransformation(supercell_matrix))
+        t.append(SupercellTransformation(supercell_matrix=supercell_matrix))
         t.append(WriteVaspFromIOSetPrevStructure(vasp_input_set=vasp_input_set))
         t.append(RunVaspCustodian(vasp_cmd=vasp_cmd, auto_npar=">>auto_npar<<", gzip_output=False))
         t.append(PassCalcLocs(name=name))
