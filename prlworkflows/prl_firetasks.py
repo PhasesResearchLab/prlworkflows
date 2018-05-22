@@ -92,11 +92,11 @@ class CalculatePhononThermalProperties(FiretaskBase):
             supercell_matrix = supercell_matrix.tolist()  # make serializable
         thermal_props_dict = {
             'volume': unitcell.volume,
-            'F_vib': f_vib,
-            'CV_vib': cv_vib,
-            'S_vib': s_vib,
-            'temperatures': temperatures,
-            'force_constants': force_constants,
+            'F_vib': f_vib.tolist(),
+            'CV_vib': cv_vib.tolist(),
+            'S_vib': s_vib.tolist(),
+            'temperatures': temperatures.tolist(),
+            'force_constants': force_constants.tolist(),
             'metadata': metadata,
             'unitcell': unitcell.as_dict(),
             'supercell_matrix': supercell_matrix,
