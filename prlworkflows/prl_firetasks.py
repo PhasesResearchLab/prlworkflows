@@ -76,22 +76,36 @@ class CalculatePhononThermalProperties(FiretaskBase):
     a POSCAR-unitcell be present in the current directory.
     """
 
-    required_params = ['supercell_matrix', 't_min', 't_max', 't_step']
+    required_params = ['supercell_matrix', 't_min', 't_max', 't_step', 'db_file', 'tag']
+    optional_params = ['metadata']
 
     def run_task(self, fw_spec):
+
+        tag = self["tag"]
+        metadata = self.get('metadata', {})
+        metadata['tag'] = tag
+
         unitcell = Structure.from_file('POSCAR-unitcell')
         supercell_matrix = self['supercell_matrix']
         temperatures, f_vib, s_vib, cv_vib, force_constants = get_f_vib_phonopy(unitcell, supercell_matrix, vasprun_path='vasprun.xml', t_min=self['t_min'], t_max=self['t_max'], t_step=self['t_step'])
+        if isinstance(supercell_matrix, np.ndarray):
+            supercell_matrix = supercell_matrix.tolist()  # make serializable
         thermal_props_dict = {
             'volume': unitcell.volume,
             'F_vib': f_vib,
             'CV_vib': cv_vib,
             'S_vib': s_vib,
             'temperatures': temperatures,
-            'force_constants': force_constants
+            'force_constants': force_constants,
+            'metadata': metadata,
+            'unitcell': unitcell.as_dict(),
+            'supercell_matrix': supercell_matrix,
         }
 
-        return FWAction(stored_data=thermal_props_dict, mod_spec=[{'_push': {'f_vib': thermal_props_dict}}])
+        # insert into database
+        db_file = env_chk(self["db_file"], fw_spec)
+        vasp_db = VaspCalcDb.from_db_file(db_file, admin=True)
+        vasp_db.db['phonon'].insert_one(thermal_props_dict)
 
 
 @explicit_serialize
@@ -145,7 +159,6 @@ class QHAAnalysis(FiretaskBase):
         volumes = []
         dos_objs = []  # pymatgen.electronic_structure.dos.Dos objects
         structure = None  # single Structure for QHA calculation
-        metadata = None  # single metadata for the tag to add to this job
         for calc in static_calculations:
             energies.append(calc['output']['energy'])
             volumes.append(calc['output']['structure']['lattice']['volume'])
@@ -163,8 +176,9 @@ class QHAAnalysis(FiretaskBase):
 
         if self['phonon']:
             # get the vibrational properties from the FW spec
-            vol_vol = [sp['volume'] for sp in fw_spec['f_vib']]  # these are just used for sorting and will be thrown away
-            vol_f_vib = [sp['F_vib'] for sp in fw_spec['f_vib']]
+            phonon_calculations = list(vasp_db.db['phonon'].find({'metadata.tag': tag}))
+            vol_vol = [calc['volume'] for calc in phonon_calculations]  # these are just used for sorting and will be thrown away
+            vol_f_vib = [calc['F_vib'] for calc in phonon_calculations]
             # sort them order of the unit cell volumes
             vol_f_vib = sort_x_by_y(vol_f_vib, vol_vol)
             f_vib = np.vstack(vol_f_vib)

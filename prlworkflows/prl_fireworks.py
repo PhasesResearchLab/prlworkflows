@@ -1,3 +1,6 @@
+import warnings
+from uuid import uuid4
+
 from fireworks import Firework
 from atomate.vasp.firetasks.parse_outputs import VaspToDb
 from atomate.vasp.firetasks.write_inputs import WriteVaspFromIOSet
@@ -7,7 +10,6 @@ from atomate.vasp.firetasks.run_calc import RunVaspCustodian
 from prlworkflows.input_sets import PRLRelaxSet, PRLStaticSet, PRLForceConstantsSet
 from prlworkflows.prl_firetasks import WriteVaspFromIOSetPrevStructure, SupercellTransformation, CalculatePhononThermalProperties
 
-import warnings
 
 class PRLOptimizeFW(Firework):
     """
@@ -139,11 +141,18 @@ class PRLPhononFW(Firework):
     """
     def __init__(self, structure, supercell_matrix, t_min=5, t_max=2000, t_step=5,
                  name="phonon", vasp_input_set=None,
-                 vasp_cmd="vasp", metadata=None,
+                 vasp_cmd="vasp", metadata=None, tag=None,
                  prev_calc_loc=True, db_file=None, parents=None,
                  **kwargs):
 
         metadata = metadata or {}
+        tag = tag or metadata.get('tag')
+        # generate a tag with a warning
+        if tag is None:
+            tag = str(uuid4())
+            warnings.warn('No ``tag`` was passed explicitly or in ``metadata`` to PRLPhononFW. In order to find this Firework later, you should assign one. This was assigned: {}'.format(tag))
+            metadata['tag'] = tag
+
         vasp_input_set = vasp_input_set or PRLForceConstantsSet(structure)
 
         t = []
@@ -162,7 +171,7 @@ class PRLPhononFW(Firework):
         t.append(WriteVaspFromIOSetPrevStructure(vasp_input_set=vasp_input_set))
         t.append(RunVaspCustodian(vasp_cmd=vasp_cmd, auto_npar=">>auto_npar<<", gzip_output=False))
         t.append(PassCalcLocs(name=name))
-        t.append(CalculatePhononThermalProperties(supercell_matrix=supercell_matrix, t_min=t_min, t_max=t_max, t_step=t_step))
+        t.append(CalculatePhononThermalProperties(supercell_matrix=supercell_matrix, t_min=t_min, t_max=t_max, t_step=t_step, db_file=db_file, tag=tag, metadata=metadata))
 
         super(PRLPhononFW, self).__init__(t, parents=parents, name="{}-{}".format(
             structure.composition.reduced_formula, name), **kwargs)
