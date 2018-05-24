@@ -68,6 +68,7 @@ class PRLForceConstantsSet(DictSet):
         'grid_density': 8000,
     })
     CONFIG['KPOINTS'].pop('reciprocal_density') # to be explicit
+    CONFIG['INCAR'].pop('ENCUT')  # use the ENCUT set by PREC
     CONFIG['INCAR'].update({
         'EDIFF_PER_ATOM': 1e-6,
         'ISMEAR': 1,
@@ -78,7 +79,7 @@ class PRLForceConstantsSet(DictSet):
         'POTIM': 0.015,  # displacement distance
         'NFREE': 2,  # how many displacments to do. 2 gives +POTIM and -POTIM
         'NSW': 1,  # backwards compatibility setting
-        'PREC': 'Accurate',
+        'PREC': 'HIGH',
         'ALGO': 'NORMAL',
         'SYMPREC': 1e-4,  # some supercells seem to have issues with primcel VASP algorithm
     })
