@@ -2,6 +2,7 @@
 Custom Firetasks for prlworkflows
 """
 from pymatgen import Structure
+from pymatgen.io.vasp.outputs import Vasprun
 from fireworks import explicit_serialize, FiretaskBase, FWAction
 from atomate.utils.utils import load_class, env_chk
 from atomate.vasp.database import VaspCalcDb
@@ -106,6 +107,7 @@ class CalculatePhononThermalProperties(FiretaskBase):
         db_file = env_chk(self["db_file"], fw_spec)
         vasp_db = VaspCalcDb.from_db_file(db_file, admin=True)
         vasp_db.db['phonon'].insert_one(thermal_props_dict)
+
 
 
 @explicit_serialize
