@@ -8,11 +8,11 @@ sublattice models and symmetry from user-input.
 
 import numpy as np
 import pytest
-from pymatgen import Lattice
+from prlworkflows.structure_builders.sqs_db import lat_in_to_sqs
+from pymatgen import Lattice, Structure
 
-from prlworkflows.sqs import AbstractSQS, enumerate_sqs, SQS
-from prlworkflows.sqs_db import lat_in_to_sqs
-
+from prlworkflows.structure_builders.sqs import AbstractSQS, enumerate_sqs
+from prlworkflows import PRLStructure
 
 ATAT_FCC_A1_LEV3_LATTICE_IN = """1.000000 0.000000 0.000000
 0.000000 1.000000 0.000000
@@ -376,7 +376,7 @@ def test_sqs_is_properly_enumerated_for_a_multiple_solution_sublattice_model():
     structure = lat_in_to_sqs(ATAT_ROCKSALT_B1_LATTICE_IN)
     structures = enumerate_sqs(structure, [['Al', 'Ni'], ['Fe', 'Cr']])
     assert len(structures) == 9
-    assert all([isinstance(s, SQS) for s in structures])
+    assert all([isinstance(s, PRLStructure) for s in structures])
 
 def test_enumerating_sqs_without_symmetry():
     structure = lat_in_to_sqs(ATAT_GAMMA_L12_LATTICE_IN)
@@ -408,8 +408,8 @@ def test_equality_of_sqs_objects():
     occupancy = [[0.5, 0.5], [1]]
     site_ratios = [3, 1]
     # Use same sublattice for different underlying structures. Should be equal
-    s1 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config, sublattice_occupancies=occupancy, sublattice_site_ratios=site_ratios)
-    s2 = SQS(Lattice.cubic(1), ['Fe'], [[0,0,0]], sublattice_configuration=config, sublattice_occupancies=occupancy, sublattice_site_ratios=site_ratios)
+    s1 = PRLStructure(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0, 0, 0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config, sublattice_occupancies=occupancy, sublattice_site_ratios=site_ratios)
+    s2 = PRLStructure(Lattice.cubic(1), ['Fe'], [[0, 0, 0]], sublattice_configuration=config, sublattice_occupancies=occupancy, sublattice_site_ratios=site_ratios)
     assert s1 == s2
 
     # Use same underlying crystal structures, but different sublattice configurations. Should be not equal
@@ -439,7 +439,56 @@ def test_equality_of_sqs_objects_with_different_indexing():
     occupancy_2 = [[1], [0.25, 0.75]]
     site_ratios_2 = [1, 3]
 
-    s1 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_1, sublattice_occupancies=occupancy_1, sublattice_site_ratios=site_ratios_1)
-    s2 = SQS(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0,0,0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_2, sublattice_occupancies=occupancy_2, sublattice_site_ratios=site_ratios_2)
+    s1 = PRLStructure(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0, 0, 0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_1, sublattice_occupancies=occupancy_1, sublattice_site_ratios=site_ratios_1)
+    s2 = PRLStructure(Lattice.hexagonal(1, 2), ['Mg', 'Mg'], [[0, 0, 0], [0.3333, 0.66666, 0.5]], sublattice_configuration=config_2, sublattice_occupancies=occupancy_2, sublattice_site_ratios=site_ratios_2)
 
     assert s1 == s2
+
+def test_structures_can_be_made_from_pmg_structures():
+    """PMG Structures should make a PRLStructure with equivalent wyckoff sites"""
+    SIGMA_POSCAR = """H10 H4 H16
+1.0
+1.900000 0.000000 0.000000
+-0.000000 1.900000 0.000000
+0.000000 0.000000 1.000000
+B H C H  Y
+1 1 2 24 2
+direct
+0.000000 0.000000 0.500000 B
+0.500000 0.500000 0.000000 H
+0.561000 0.235000 0.000000 C
+0.235000 0.561000 0.000000 C
+-0.235000 -0.561000 0.000000 H
+-0.561000 -0.235000 0.000000 H
+1.061000 0.265000 -0.500000 H
+0.265000 1.061000 -0.500000 H
+0.735000 -0.061000 -0.500000 H
+-0.061000 0.735000 -0.500000 H
+0.103000 0.103000 0.000000 H
+-0.103000 -0.103000 0.000000 H
+0.603000 0.397000 -0.500000 H
+0.397000 0.603000 -0.500000 H
+0.318000 0.318000 0.730000 H
+-0.318000 -0.318000 0.730000 H
+0.318000 0.318000 0.270000 H
+-0.318000 -0.318000 0.270000 H
+0.818000 0.182000 0.230000 H
+0.182000 0.818000 0.230000 H
+0.818000 0.182000 -0.230000 H
+0.182000 0.818000 -0.230000 H
+0.367000 0.038000 0.000000 H
+0.038000 0.367000 0.000000 H
+-0.038000 -0.367000 0.000000 H
+-0.367000 -0.038000 0.000000 H
+0.867000 0.462000 -0.500000 H
+0.462000 0.867000 -0.500000 H
+0.538000 0.133000 -0.500000 Y
+0.133000 0.538000 -0.500000 Y
+    """
+
+    s = Structure.from_str(SIGMA_POSCAR, fmt='POSCAR')
+    ps = PRLStructure.from_structure(s, [['j', 'b']])
+
+    assert ps.sublattice_occupancies == [[0.1, 0.9], [1.0], [0.125, 0.75, 0.125]]
+    assert ps.sublattice_site_ratios == [10, 4, 16]
+    assert ps.sublattice_configuration == [['B', 'H'], ['H'], ['C', 'H', 'Y']]
